@@ -1,0 +1,14 @@
+name: Commit Message
+
+on:
+  push:
+    branches:
+      - main
+      - workflow-dispatch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Affiché le dernier commit message 
+        run: echo "Le dernier commit message est : $(git log -1 --pretty=%B)"
