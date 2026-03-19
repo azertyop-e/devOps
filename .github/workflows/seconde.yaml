@@ -15,11 +15,13 @@ jobs:
       - name: Installer Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 22
+          
       - name: Installer python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.10
+          python-version: 3.13
+
       - name: afficher la version de node et python
         run: |
           echo "Node.js version: ${{ steps.node-version.outputs.node-version }}"
