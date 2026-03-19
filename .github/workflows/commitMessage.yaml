@@ -4,12 +4,14 @@ on:
   push:
     branches:
       - main
-      - workflow-dispatch
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
-      - name: Affiché le dernier commit message 
-        run: echo "Le dernier commit message est ${{ steps.last-commit.outputs.message }}"
-        
+      - name: Checkout du repository
+        uses: actions/checkout@v4
+
+      - name: Afficher le dernier message de commit
+        run: echo "Le dernier commit message est : $(git log -1 --pretty=%s)"
