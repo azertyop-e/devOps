@@ -8,7 +8,8 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Affiché le dernier commit message 
-        run: echo "Le dernier commit message est $(git log -1 --pretty=%B)"
+        run: echo "Le dernier commit message est ${{ steps.last-commit.outputs.message }}"
+        
