@@ -93,51 +93,51 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 - <<'PY'
-          import glob
-          import html
-          import os
-          from pathlib import Path
 
-          images = sorted(glob.glob("images/*.png"))
+          escape_html() {
+            # Echappe minimale HTML (suffisant pour des messages de commit).
+            # Note: l'ordre est important (on traite d'abord &).
+            echo "$1" | sed \
+              -e 's/&/\&amp;/g' \
+              -e 's/</\&lt;/g' \
+              -e 's/>/\&gt;/g' \
+              -e 's/"/\&quot;/g' \
+              -e "s/'/\&#39;/g"
+          }
 
-          def sha_from_png(p: str) -> str:
-            return Path(p).stem
+          mapfile -t pngs < <(ls -1 images/*.png 2>/dev/null | sort || true)
+          # On affiche du plus récent au plus ancien (SHA lexicographique => proche d'un ordre temporel).
+          # On inverse la liste.
+          figures=""
+          for ((i=${#pngs[@]}-1; i>=0; i--)); do
+            png="${pngs[$i]}"
+            sha="$(basename "$png" .png)"
+            txt="images/${sha}.txt"
+            msg=""
+            if [ -f "$txt" ]; then
+              msg="$(cat "$txt" | tr -d '\r' | sed -e 's/[[:space:]]*$//')"
+            fi
 
-          figures = []
-          for png in images:
-            sha = sha_from_png(png)
-            txt = Path("images") / f"{sha}.txt"
-            msg = txt.read_text(encoding="utf-8", errors="replace").strip() if txt.exists() else ""
+            img_src="$(basename "$png")"
+            esc_msg="$(escape_html "$msg")"
+            figures="${figures}<figure><img src=\"${img_src}\" alt=\"${esc_msg}\" style=\"max-width: 600px; width: 100%; height: auto;\" /><figcaption>${esc_msg}</figcaption></figure>"
+          done
 
-            # Le contenu est publié depuis le dossier images, donc le chemin d'image côté Pages est relatif à la racine.
-            img_src = f"{Path(png).name}"
-            figures.append(
-              f"<figure>"
-              f"<img src=\"{html.escape(img_src)}\" alt=\"{html.escape(msg)}\" style=\"max-width: 600px; width: 100%; height: auto;\" />"
-              f"<figcaption>{html.escape(msg)}</figcaption>"
-              f"</figure>"
-            )
-
-          # Inversion pour afficher les dernières créations en premier (ordre lexicographique du SHA).
-          figures = list(reversed(figures))
-
-          html_out = f"""<!doctype html>
-          <html lang="fr">
-          <head>
-            <meta charset="utf-8" />
-            <meta name="viewport" content="width=device-width, initial-scale=1" />
-            <title>Images générées</title>
-          </head>
-          <body style="font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; margin: 2rem;">
-            <h1>Images générées</h1>
-            <p>D'après les messages de commit.</p>
-            {''.join(figures)}
-          </body>
-          </html>"""
-
-          Path("images/index.html").write_text(html_out, encoding="utf-8")
-          PY
+          cat > images/index.html <<EOF
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Images générées</title>
+</head>
+<body style="font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; margin: 2rem;">
+  <h1>Images générées</h1>
+  <p>D'après les messages de commit.</p>
+  ${figures}
+</body>
+</html>
+EOF
 
       - name: Déployer sur GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
