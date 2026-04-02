@@ -123,21 +123,7 @@ jobs:
             figures="${figures}<figure><img src=\"${img_src}\" alt=\"${esc_msg}\" style=\"max-width: 600px; width: 100%; height: auto;\" /><figcaption>${esc_msg}</figcaption></figure>"
           done
 
-          cat > images/index.html <<EOF
-<!doctype html>
-<html lang="fr">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Images générées</title>
-</head>
-<body style="font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; margin: 2rem;">
-  <h1>Images générées</h1>
-  <p>D'après les messages de commit.</p>
-  ${figures}
-</body>
-</html>
-EOF
+          echo "${figures}" > images/index.html
 
       - name: Déployer sur GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
