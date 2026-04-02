@@ -39,9 +39,13 @@ jobs:
         run: |
           set -euo pipefail
           commit_message="$(git log -1 --pretty=%B | tr -d '\r')"
-          echo "message<<'EOF'" >> "$GITHUB_OUTPUT"
-          echo "$commit_message" >> "$GITHUB_OUTPUT"
-          echo "EOF" >> "$GITHUB_OUTPUT"
+          # Délimiteur unique pour éviter tout conflit si le message contient "EOF".
+          delim="DELIM_${GITHUB_SHA}_${RANDOM}"
+          {
+            echo "message<<${delim}"
+            printf '%s\n' "$commit_message"
+            echo "${delim}"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Appeler l'API DynaPictures et télécharger l'image
         env:
