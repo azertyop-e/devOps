@@ -158,4 +158,11 @@ jobs:
           publish_dir: ./images
           destination_dir: images
           publish_branch: gh-pages
+
+      - name: Afficher l'URL du site GitHub Pages
+        shell: bash
+        run: |
+          owner="${GITHUB_REPOSITORY%%/*}"
+          repo="${GITHUB_REPOSITORY##*/}"
+          echo "Site GitHub Pages : https://${owner}.github.io/${repo}/images/index.html"
         
