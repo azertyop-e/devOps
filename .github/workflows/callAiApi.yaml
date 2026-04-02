@@ -28,8 +28,15 @@ jobs:
           if git ls-remote --exit-code --heads "$REPO_URL" gh-pages >/dev/null 2>&1; then
             rm -rf gh-pages-tmp
             git clone --depth 1 --branch gh-pages "$REPO_URL" gh-pages-tmp
-            # Copie tout le contenu précédent (png + txt + index éventuel).
-            cp -R gh-pages-tmp/* images/ 2>/dev/null || true
+            # Copie uniquement le dossier "images" existant pour éviter images/images/.
+            if [ -d "gh-pages-tmp/images" ]; then
+              cp -f gh-pages-tmp/images/*.png images/ 2>/dev/null || true
+              cp -f gh-pages-tmp/images/*.txt images/ 2>/dev/null || true
+            else
+              # Fallback si le précédent déploiement n'avait pas de dossier images/.
+              cp -f gh-pages-tmp/*.png images/ 2>/dev/null || true
+              cp -f gh-pages-tmp/*.txt images/ 2>/dev/null || true
+            fi
             rm -rf gh-pages-tmp
           fi
 
@@ -101,12 +108,13 @@ jobs:
           escape_html() {
             # Echappe minimale HTML (suffisant pour des messages de commit).
             # Note: l'ordre est important (on traite d'abord &).
-            echo "$1" | sed \
+            # On remplace aussi les retours à la ligne par <br/> pour garder la mise en page.
+            printf '%s' "$1" | sed \
               -e 's/&/\&amp;/g' \
               -e 's/</\&lt;/g' \
               -e 's/>/\&gt;/g' \
               -e 's/"/\&quot;/g' \
-              -e "s/'/\&#39;/g"
+              -e "s/'/\&#39;/g" | tr '\n' '<br/>'
           }
 
           mapfile -t pngs < <(ls -1 images/*.png 2>/dev/null | sort || true)
@@ -127,12 +135,27 @@ jobs:
             figures="${figures}<figure><img src=\"${img_src}\" alt=\"${esc_msg}\" style=\"max-width: 600px; width: 100%; height: auto;\" /><figcaption>${esc_msg}</figcaption></figure>"
           done
 
-          echo "${figures}" > images/index.html
+          cat > images/index.html <<EOF
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Images générées</title>
+</head>
+<body style="font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; margin: 2rem;">
+  <h1>Images générées</h1>
+  <p>D'après les messages de commit.</p>
+  ${figures}
+</body>
+</html>
+EOF
 
       - name: Déployer sur GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./images
+          destination_dir: images
           publish_branch: gh-pages
         
