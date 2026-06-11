@@ -185,7 +185,7 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./images/
-          server-dir: /devops.freepage.cc/htdocs/images/
+          server-dir: /htdocs/images/
           log-level: verbose
           exclude: |
             **/.git/**
