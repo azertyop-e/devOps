@@ -5,16 +5,31 @@ on:
     workflows: ["Generate Image"]
     types: [completed]
 
+permissions:
+  actions: read
+  contents: read
+
 jobs:
   notify:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Récupérer le message du commit
         id: commit
-        run: echo "message=$(git log -1 --pretty=%B)" >> $GITHUB_OUTPUT
+        shell: bash
+        run: |
+          set -euo pipefail
+          commit_message="$(git log -1 --pretty=%B | tr -d '\r')"
+          delim="DELIM_${GITHUB_SHA}_${RANDOM}"
+          {
+            echo "message<<${delim}"
+            printf '%s\n' "$commit_message"
+            echo "${delim}"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Télécharger l'artefact
         uses: actions/download-artifact@v4
@@ -25,9 +40,18 @@ jobs:
           run-id: ${{ github.event.workflow_run.id }}
 
       - name: Envoyer notification Discord
+        env:
+          COMMIT_MESSAGE: ${{ steps.commit.outputs.message }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        shell: bash
         run: |
+          set -euo pipefail
           IMAGE_NAME=$(ls ./artifacts | head -n 1)
           IMAGE_URL="http://devops.freepage.cc/images/$IMAGE_NAME"
-          curl -s -X POST "${{ secrets.DISCORD_WEBHOOK_URL }}" \
+          payload="$(jq -n \
+            --arg content "Nouveau commit : ${COMMIT_MESSAGE}" \
+            --arg url "$IMAGE_URL" \
+            '{content: $content, embeds: [{image: {url: $url}}]}')"
+          curl -sS -X POST "$DISCORD_WEBHOOK_URL" \
             -H "Content-Type: application/json" \
-            -d "{\"content\": \"Nouveau commit : ${{ steps.commit.outputs.message }}\", \"embeds\": [{\"image\": {\"url\": \"$IMAGE_URL\"}}]}"
+            -d "$payload"
