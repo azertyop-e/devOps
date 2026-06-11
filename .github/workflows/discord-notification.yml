@@ -1,8 +1,8 @@
-name: Discord Notification
+name: Ex. 03 — Discord Notification
 
 on:
   workflow_run:
-    workflows: ["Generate Image"]
+    workflows: ["Ex. 02 — Generate Image"]
     types: [completed]
 
 permissions:

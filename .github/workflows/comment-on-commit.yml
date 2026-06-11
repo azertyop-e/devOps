@@ -1,8 +1,8 @@
-name: Comment on Commit
+name: Ex. 04 — Comment on Commit
 
 on:
   workflow_run:
-    workflows: ["Generate Image"]
+    workflows: ["Ex. 02 — Generate Image"]
     types: [completed]
 
 permissions:

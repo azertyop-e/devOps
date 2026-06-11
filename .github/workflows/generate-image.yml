@@ -1,4 +1,4 @@
-name: Generate Image
+name: Ex. 02 — Generate Image
 
 on:
   push:

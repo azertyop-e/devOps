@@ -1,4 +1,4 @@
-name: Generate File
+name: Artifact Demo
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  generateFile:
+  upload-artifact:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout du repository
@@ -15,15 +15,15 @@ jobs:
       - name: Générer un fichier
         run: echo "Bonjour, je suis un workflow qui génère un fichier"
 
-      - name: Artefact
+      - name: Upload artefact
         uses: actions/upload-artifact@v4
         with:
           name: readme-artifact
           path: README.md
 
-  useArtifact:
+  download-artifact:
     runs-on: ubuntu-latest
-    needs: generateFile
+    needs: upload-artifact
     steps:
       - name: Checkout du repository
         uses: actions/checkout@v4
