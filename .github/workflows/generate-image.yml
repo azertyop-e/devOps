@@ -92,7 +92,9 @@ jobs:
           echo "Image sauvegardée : $image_file"
           echo "$COMMIT_MESSAGE" > "$meta_file"
 
-      - name: Générer index.html (toutes les images)
+      - name: Ajouter l'image à index.html
+        env:
+          COMMIT_MESSAGE: ${{ steps.commit.outputs.message }}
         shell: bash
         run: |
           set -euo pipefail
@@ -106,23 +108,20 @@ jobs:
               -e "s/'/\&#39;/g" | tr '\n' '<br/>'
           }
 
-          mapfile -t pngs < <(ls -1 images/*.png 2>/dev/null | sort || true)
-          figures=""
-          for ((i=${#pngs[@]}-1; i>=0; i--)); do
-            png="${pngs[$i]}"
-            sha="$(basename "$png" .png)"
-            txt="images/${sha}.txt"
-            msg=""
-            if [ -f "$txt" ]; then
-              msg="$(cat "$txt" | tr -d '\r' | sed -e 's/[[:space:]]*$//')"
-            fi
+          sha="${GITHUB_SHA}"
+          index_file="images/index.html"
+          img_src="${sha}.png"
+          msg="$(printf '%s' "${COMMIT_MESSAGE}" | tr -d '\r' | sed -e 's/[[:space:]]*$//')"
+          esc_msg="$(escape_html "$msg")"
+          new_figure="<figure><img src=\"${img_src}\" alt=\"${esc_msg}\" style=\"max-width: 600px; width: 100%; height: auto;\" /><figcaption>${esc_msg}</figcaption></figure>"
 
-            img_src="$(basename "$png")"
-            esc_msg="$(escape_html "$msg")"
-            figures="${figures}<figure><img src=\"${img_src}\" alt=\"${esc_msg}\" style=\"max-width: 600px; width: 100%; height: auto;\" /><figcaption>${esc_msg}</figcaption></figure>"
-          done
+          if [ -f "$index_file" ] && grep -q "${img_src}" "$index_file"; then
+            echo "L'image ${img_src} est déjà présente dans index.html, aucune modification."
+            exit 0
+          fi
 
-          cat > images/index.html <<EOF
+          if [ ! -f "$index_file" ]; then
+            cat > "$index_file" <<EOF
           <!doctype html>
           <html lang="fr">
           <head>
@@ -133,10 +132,34 @@ jobs:
           <body style="font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; margin: 2rem;">
             <h1>Images générées</h1>
             <p>D'après les messages de commit.</p>
-            ${figures}
+          ${new_figure}
           </body>
           </html>
           EOF
+            echo "index.html créé avec la première image."
+            exit 0
+          fi
+
+          marker='<p>D'\''après les messages de commit.</p>'
+          if grep -qF "$marker" "$index_file"; then
+            awk -v marker="$marker" -v figure="$new_figure" '
+              {
+                print
+                if (index($0, marker) > 0) {
+                  print figure
+                }
+              }
+            ' "$index_file" > "${index_file}.tmp"
+          else
+            awk -v figure="$new_figure" '
+              /<\/body>/ {
+                print figure
+              }
+              { print }
+            ' "$index_file" > "${index_file}.tmp"
+          fi
+          mv "${index_file}.tmp" "$index_file"
+          echo "Nouvelle image ajoutée à index.html."
 
       - name: Committer et pousser l'image dans le repo
         shell: bash
@@ -162,7 +185,14 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./images/
-          server-dir: /htdocs/images/
+          server-dir: /devops.freepage.cc/htdocs/images/
+          log-level: verbose
+          exclude: |
+            **/.git/**
+            **/.git*/**
+            **/.DS_Store
+            **/*.txt
+            **/.ftp-deploy-sync-state.json
 
       - name: Afficher l'URL du site
         shell: bash
