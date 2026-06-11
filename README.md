@@ -9,9 +9,9 @@
 
 <!-- BADGES-STATS-START -->
 ![GitHub release](https://img.shields.io/badge/release-none-lightgrey?logo=github)
-![Contributors](https://img.shields.io/badge/contributors-1-blue?logo=github)
+![Contributors](https://img.shields.io/badge/contributors-2-blue?logo=github)
 ![Stars](https://img.shields.io/badge/stars-0-yellow?logo=github)
-![Last commit](https://img.shields.io/badge/last_commit-main-brightgreen?logo=github)
+![Last commit](https://img.shields.io/badge/last_commit-2026-06-11-brightgreen?logo=github)
 <!-- BADGES-STATS-END -->
 
 ## Exercices GitHub Actions
