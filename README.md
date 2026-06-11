@@ -1,15 +1,18 @@
 # Exercice Workflow GitHub Actions
 
-![Commit Message](https://github.com/azertyop-e/devOps/actions/workflows/commit-message.yml/badge.svg)
-![Generate Image](https://github.com/azertyop-e/devOps/actions/workflows/generate-image.yml/badge.svg)
-![Discord](https://github.com/azertyop-e/devOps/actions/workflows/discord-notification.yml/badge.svg)
-![Comment](https://github.com/azertyop-e/devOps/actions/workflows/comment-on-commit.yml/badge.svg)
-![Update Badges](https://github.com/azertyop-e/devOps/actions/workflows/update-badges.yml/badge.svg)
+![Ex. 01 — Commit Message](https://github.com/azertyop-e/devOps/actions/workflows/commit-message.yml/badge.svg)
+![Ex. 02 — Generate Image](https://github.com/azertyop-e/devOps/actions/workflows/generate-image.yml/badge.svg)
+![Ex. 03 — Discord Notification](https://github.com/azertyop-e/devOps/actions/workflows/discord-notification.yml/badge.svg)
+![Ex. 04 — Comment on Commit](https://github.com/azertyop-e/devOps/actions/workflows/comment-on-commit.yml/badge.svg)
+![Ex. 05 — Update Badges](https://github.com/azertyop-e/devOps/actions/workflows/update-badges.yml/badge.svg)
+![Artifact Demo](https://github.com/azertyop-e/devOps/actions/workflows/artifact-demo.yml/badge.svg)
 
-![GitHub release](https://img.shields.io/github/v/release/azertyop-e/devOps)
-![Contributors](https://img.shields.io/github/contributors/azertyop-e/devOps)
-![Stars](https://img.shields.io/github/stars/azertyop-e/devOps)
-![Last commit](https://img.shields.io/github/last-commit/azertyop-e/devOps)
+<!-- BADGES-STATS-START -->
+![GitHub release](https://img.shields.io/badge/release-none-lightgrey?logo=github)
+![Contributors](https://img.shields.io/badge/contributors-1-blue?logo=github)
+![Stars](https://img.shields.io/badge/stars-0-yellow?logo=github)
+![Last commit](https://img.shields.io/badge/last_commit-main-brightgreen?logo=github)
+<!-- BADGES-STATS-END -->
 
 ## Exercices GitHub Actions
 
@@ -25,7 +28,8 @@ exerciceWorkflow/
 │       ├── generate-image.yml          # Ex. 02 - Générer une image via API DynaPictures
 │       ├── discord-notification.yml    # Ex. 03 - Envoyer notification Discord
 │       ├── comment-on-commit.yml       # Ex. 04 - Commenter sur le commit
-│       └── update-badges.yml           # Ex. 05 - Mettre à jour les badges
+│       ├── update-badges.yml           # Ex. 05 - Mettre à jour les badges
+│       └── artifact-demo.yml           # Demo - Upload/download d'artefacts
 ├── images/
 │   └── .gitkeep
 └── README.md

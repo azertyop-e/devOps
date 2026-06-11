@@ -1,17 +1,90 @@
-name: Update Badges
+name: Ex. 05 — Update Badges
 
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - 'README.md'
   release:
     types: [published]
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   badges:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Badges already in README
-        run: echo "Badges are static in README.md - no update needed"
+      - name: Mettre à jour les badges du README
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          repo="${{ github.repository }}"
+          stars="$(gh api "repos/${repo}" --jq '.stargazers_count')"
+          contributors="$(gh api "repos/${repo}/contributors?anon=1" --paginate --jq 'length')"
+          last_commit="$(git log -1 --format=%cs)"
+          release="$(gh api "repos/${repo}/releases/latest" --jq -r '.tag_name // empty' 2>/dev/null || true)"
+
+          if [ -z "$release" ]; then
+            release="none"
+            release_color="lightgrey"
+          else
+            release_color="blue"
+          fi
+
+          export BADGE_RELEASE="![GitHub release](https://img.shields.io/badge/release-${release}-${release_color}?logo=github)"
+          export BADGE_CONTRIBUTORS="![Contributors](https://img.shields.io/badge/contributors-${contributors}-blue?logo=github)"
+          export BADGE_STARS="![Stars](https://img.shields.io/badge/stars-${stars}-yellow?logo=github)"
+          export BADGE_LAST_COMMIT="![Last commit](https://img.shields.io/badge/last_commit-${last_commit}-brightgreen?logo=github)"
+
+          python3 <<'PY'
+          import os
+          import pathlib
+          import re
+
+          replacement = "\n".join([
+              "<!-- BADGES-STATS-START -->",
+              os.environ["BADGE_RELEASE"],
+              os.environ["BADGE_CONTRIBUTORS"],
+              os.environ["BADGE_STARS"],
+              os.environ["BADGE_LAST_COMMIT"],
+              "<!-- BADGES-STATS-END -->",
+          ])
+
+          readme = pathlib.Path("README.md")
+          content = readme.read_text(encoding="utf-8")
+          updated, count = re.subn(
+              r"<!-- BADGES-STATS-START -->.*?<!-- BADGES-STATS-END -->",
+              replacement,
+              content,
+              count=1,
+              flags=re.S,
+          )
+
+          if count != 1:
+              raise SystemExit("Marqueurs BADGES-STATS introuvables dans README.md")
+
+          readme.write_text(updated, encoding="utf-8")
+          PY
+
+      - name: Commit et push des badges
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet README.md; then
+            echo "README.md déjà à jour."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "chore: mettre à jour les badges du README"
+          git push
