@@ -41,7 +41,6 @@ jobs:
         env:
           DYNA_API_KEY: ${{ secrets.DYNAPICTURES_API_KEY }}
           DYNA_TEMPLATE_UID: ${{ secrets.DYNAPICTURES_TEMPLATE_UID }}
-          DYNA_TEXT_PARAM_NAME: ${{ secrets.DYNAPICTURES_TEXT_PARAM_NAME }}
           COMMIT_MESSAGE: ${{ steps.commit.outputs.message }}
         shell: bash
         run: |
@@ -52,20 +51,25 @@ jobs:
             exit 1
           fi
 
-          param_name="${DYNA_TEXT_PARAM_NAME:-text1}"
           sha="${GITHUB_SHA}"
           image_file="images/${sha}.png"
           meta_file="images/${sha}.txt"
+          commit_title="$(printf '%s\n' "${COMMIT_MESSAGE}" | head -n1 | sed -e 's/[[:space:]]*$//')"
+          coupon_code="$(printf '%s' "${sha}" | cut -c1-7 | tr '[:lower:]' '[:upper:]')"
 
           echo "Message du commit : ${COMMIT_MESSAGE}"
           echo "Template UID      : ${DYNA_TEMPLATE_UID}"
-          echo "Paramètre texte   : ${param_name}"
+          echo "mockup_name_2     : ${commit_title}"
+          echo "mockup_coupon_4   : ${coupon_code}"
 
           payload="$(jq -n \
             --arg format "png" \
-            --arg name "${param_name}" \
-            --arg text "${COMMIT_MESSAGE}" \
-            '{format:$format, params:[{name:$name, text:$text}]}')"
+            --arg name_text "${commit_title}" \
+            --arg coupon_text "${coupon_code}" \
+            '{format:$format, params:[
+              {name:"mockup_name_2", text:$name_text},
+              {name:"mockup_coupon_4", text:$coupon_text}
+            ]}')"
 
           echo "Payload envoyé : ${payload}"
 
