@@ -1,0 +1,1 @@
+fix: mettre à jour index.html de façon incrémentale et corriger le déploiement FTP
