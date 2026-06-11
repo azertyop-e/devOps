@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - 'images/**'
   workflow_dispatch:
 
 permissions:
@@ -15,6 +17,8 @@ jobs:
     steps:
       - name: Checkout du repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Préparer le dossier images
         shell: bash
@@ -37,7 +41,7 @@ jobs:
         env:
           DYNA_API_KEY: ${{ secrets.DYNAPICTURES_API_KEY }}
           DYNA_TEMPLATE_UID: ${{ secrets.DYNAPICTURES_TEMPLATE_UID }}
-          DYNA_TEXT_PARAM_NAME: text1
+          DYNA_TEXT_PARAM_NAME: ${{ secrets.DYNAPICTURES_TEXT_PARAM_NAME }}
           COMMIT_MESSAGE: ${{ steps.commit.outputs.message }}
         shell: bash
         run: |
@@ -48,15 +52,22 @@ jobs:
             exit 1
           fi
 
+          param_name="${DYNA_TEXT_PARAM_NAME:-text1}"
           sha="${GITHUB_SHA}"
           image_file="images/${sha}.png"
           meta_file="images/${sha}.txt"
 
+          echo "Message du commit : ${COMMIT_MESSAGE}"
+          echo "Template UID      : ${DYNA_TEMPLATE_UID}"
+          echo "Paramètre texte   : ${param_name}"
+
           payload="$(jq -n \
             --arg format "png" \
-            --arg name "${DYNA_TEXT_PARAM_NAME}" \
+            --arg name "${param_name}" \
             --arg text "${COMMIT_MESSAGE}" \
-            '{format:$format, params:[{name:$name, text:$text}] }')"
+            '{format:$format, params:[{name:$name, text:$text}]}')"
+
+          echo "Payload envoyé : ${payload}"
 
           url="https://api.dynapictures.com/designs/${DYNA_TEMPLATE_UID}"
           response="$(curl -sS -X POST "$url" \
@@ -64,15 +75,17 @@ jobs:
             -H "Content-Type: application/json" \
             -d "$payload")"
 
-          image_url="$(echo "$response" | jq -r '.imageUrl // empty')"
+          echo "Réponse API : ${response}"
+
+          image_url="$(echo "$response" | jq -r '.imageUrl // .url // empty')"
           if [ -z "$image_url" ] || [ "$image_url" = "null" ]; then
-            echo "Réponse API inattendue (imageUrl manquant):"
-            echo "$response"
+            echo "Erreur : imageUrl absent de la réponse."
             exit 1
           fi
 
-          echo "Téléchargement: $image_url"
+          echo "Téléchargement de l'image : $image_url"
           curl -sS -L --fail "$image_url" -o "$image_file"
+          echo "Image sauvegardée : $image_file"
           echo "$COMMIT_MESSAGE" > "$meta_file"
 
       - name: Générer index.html (toutes les images)
@@ -120,6 +133,17 @@ jobs:
           </body>
           </html>
           EOF
+
+      - name: Committer et pousser l'image dans le repo
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add images/
+          git diff --cached --quiet && echo "Rien à committer" && exit 0
+          git commit -m "chore: image générée pour le commit ${GITHUB_SHA::7}"
+          git push
 
       - name: Upload artefact image-generee
         uses: actions/upload-artifact@v4
