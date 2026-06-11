@@ -2,54 +2,160 @@ name: Generate Image
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   generate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout du repository
+        uses: actions/checkout@v4
 
-      - name: Récupérer le message du commit
+      - name: Préparer images et récupérer gh-pages
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p images
+
+          REPO_URL="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          if git ls-remote --exit-code --heads "$REPO_URL" gh-pages >/dev/null 2>&1; then
+            rm -rf gh-pages-tmp
+            git clone --depth 1 --branch gh-pages "$REPO_URL" gh-pages-tmp
+            if [ -d "gh-pages-tmp/images" ]; then
+              cp -f gh-pages-tmp/images/*.png images/ 2>/dev/null || true
+              cp -f gh-pages-tmp/images/*.txt images/ 2>/dev/null || true
+            else
+              cp -f gh-pages-tmp/*.png images/ 2>/dev/null || true
+              cp -f gh-pages-tmp/*.txt images/ 2>/dev/null || true
+            fi
+            rm -rf gh-pages-tmp
+          fi
+
+      - name: Récupérer message du dernier commit
         id: commit
+        shell: bash
         run: |
-          MSG=$(git log -1 --pretty=%B)
-          echo "message=$MSG" >> $GITHUB_OUTPUT
-          echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          set -euo pipefail
+          commit_message="$(git log -1 --pretty=%B | tr -d '\r')"
+          delim="DELIM_${GITHUB_SHA}_${RANDOM}"
+          {
+            echo "message<<${delim}"
+            printf '%s\n' "$commit_message"
+            echo "${delim}"
+          } >> "$GITHUB_OUTPUT"
 
-      - name: Appeler DynaPictures
+      - name: Appeler l'API DynaPictures et télécharger l'image
+        env:
+          DYNA_API_KEY: ${{ secrets.DYNAPICTURES_API_KEY }}
+          DYNA_TEMPLATE_UID: ${{ secrets.DYNAPICTURES_TEMPLATE_UID }}
+          DYNA_TEXT_PARAM_NAME: text1
+          COMMIT_MESSAGE: ${{ steps.commit.outputs.message }}
+        shell: bash
         run: |
-          curl -s -o images/commit-${{ steps.commit.outputs.sha }}.png \
-            "https://api.dynapictures.com/designs/YOUR_TEMPLATE_ID/render" \
-            -H "Authorization: Bearer ${{ secrets.DYNAPICTURES_API_KEY }}" \
+          set -euo pipefail
+
+          if [ -z "${DYNA_API_KEY}" ] || [ -z "${DYNA_TEMPLATE_UID}" ]; then
+            echo "Secrets manquants: DYNAPICTURES_API_KEY et/ou DYNAPICTURES_TEMPLATE_UID"
+            exit 1
+          fi
+
+          sha="${GITHUB_SHA}"
+          image_file="images/${sha}.png"
+          meta_file="images/${sha}.txt"
+
+          payload="$(jq -n \
+            --arg format "png" \
+            --arg name "${DYNA_TEXT_PARAM_NAME}" \
+            --arg text "${COMMIT_MESSAGE}" \
+            '{format:$format, params:[{name:$name, text:$text}] }')"
+
+          url="https://api.dynapictures.com/designs/${DYNA_TEMPLATE_UID}"
+          response="$(curl -sS -X POST "$url" \
+            -H "Authorization: Bearer ${DYNA_API_KEY}" \
             -H "Content-Type: application/json" \
-            -d '{"params": [{"name": "text", "value": "${{ steps.commit.outputs.message }}"}]}'
+            -d "$payload")"
 
-      - name: Générer index.html
+          image_url="$(echo "$response" | jq -r '.imageUrl // empty')"
+          if [ -z "$image_url" ] || [ "$image_url" = "null" ]; then
+            echo "Réponse API inattendue (imageUrl manquant):"
+            echo "$response"
+            exit 1
+          fi
+
+          echo "Téléchargement: $image_url"
+          curl -sS -L --fail "$image_url" -o "$image_file"
+          echo "$COMMIT_MESSAGE" > "$meta_file"
+
+      - name: Générer index.html (toutes les images)
+        shell: bash
         run: |
-          echo "<html><body><h1>Images générées</h1>" > images/index.html
-          for f in images/*.png; do
-            echo "<img src='$(basename $f)' style='max-width:600px'><br>" >> images/index.html
+          set -euo pipefail
+
+          escape_html() {
+            printf '%s' "$1" | sed \
+              -e 's/&/\&amp;/g' \
+              -e 's/</\&lt;/g' \
+              -e 's/>/\&gt;/g' \
+              -e 's/"/\&quot;/g' \
+              -e "s/'/\&#39;/g" | tr '\n' '<br/>'
+          }
+
+          mapfile -t pngs < <(ls -1 images/*.png 2>/dev/null | sort || true)
+          figures=""
+          for ((i=${#pngs[@]}-1; i>=0; i--)); do
+            png="${pngs[$i]}"
+            sha="$(basename "$png" .png)"
+            txt="images/${sha}.txt"
+            msg=""
+            if [ -f "$txt" ]; then
+              msg="$(cat "$txt" | tr -d '\r' | sed -e 's/[[:space:]]*$//')"
+            fi
+
+            img_src="$(basename "$png")"
+            esc_msg="$(escape_html "$msg")"
+            figures="${figures}<figure><img src=\"${img_src}\" alt=\"${esc_msg}\" style=\"max-width: 600px; width: 100%; height: auto;\" /><figcaption>${esc_msg}</figcaption></figure>"
           done
-          echo "</body></html>" >> images/index.html
 
-      - name: Commit et push images
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add images/
-          git diff --cached --quiet || git commit -m "chore: add generated image for ${{ steps.commit.outputs.sha }}"
-          git push
+          cat > images/index.html <<EOF
+          <!doctype html>
+          <html lang="fr">
+          <head>
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1" />
+            <title>Images générées</title>
+          </head>
+          <body style="font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; margin: 2rem;">
+            <h1>Images générées</h1>
+            <p>D'après les messages de commit.</p>
+            ${figures}
+          </body>
+          </html>
+          EOF
 
-      - name: Upload artefact
+      - name: Upload artefact image-generee
         uses: actions/upload-artifact@v4
         with:
           name: image-generee
-          path: images/commit-${{ steps.commit.outputs.sha }}.png
+          path: images/${{ github.sha }}.png
 
       - name: Déployer sur GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./images
+          destination_dir: images
+          publish_branch: gh-pages
+
+      - name: Afficher l'URL du site GitHub Pages
+        shell: bash
+        run: |
+          owner="${GITHUB_REPOSITORY%%/*}"
+          repo="${GITHUB_REPOSITORY##*/}"
+          echo "Site GitHub Pages : https://${owner}.github.io/${repo}/images/index.html"

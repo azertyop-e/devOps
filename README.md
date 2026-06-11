@@ -1,15 +1,15 @@
 # Exercice Workflow GitHub Actions
 
-![Commit Message](https://github.com/OWNER/REPO/actions/workflows/commit-message.yml/badge.svg)
-![Generate Image](https://github.com/OWNER/REPO/actions/workflows/generate-image.yml/badge.svg)
-![Discord](https://github.com/OWNER/REPO/actions/workflows/discord-notification.yml/badge.svg)
-![Comment](https://github.com/OWNER/REPO/actions/workflows/comment-on-commit.yml/badge.svg)
-![Update Badges](https://github.com/OWNER/REPO/actions/workflows/update-badges.yml/badge.svg)
+![Commit Message](https://github.com/azertyop-e/devOps/actions/workflows/commit-message.yml/badge.svg)
+![Generate Image](https://github.com/azertyop-e/devOps/actions/workflows/generate-image.yml/badge.svg)
+![Discord](https://github.com/azertyop-e/devOps/actions/workflows/discord-notification.yml/badge.svg)
+![Comment](https://github.com/azertyop-e/devOps/actions/workflows/comment-on-commit.yml/badge.svg)
+![Update Badges](https://github.com/azertyop-e/devOps/actions/workflows/update-badges.yml/badge.svg)
 
-![GitHub release](https://img.shields.io/github/v/release/OWNER/REPO)
-![Contributors](https://img.shields.io/github/contributors/OWNER/REPO)
-![Stars](https://img.shields.io/github/stars/OWNER/REPO)
-![Last commit](https://img.shields.io/github/last-commit/OWNER/REPO)
+![GitHub release](https://img.shields.io/github/v/release/azertyop-e/devOps)
+![Contributors](https://img.shields.io/github/contributors/azertyop-e/devOps)
+![Stars](https://img.shields.io/github/stars/azertyop-e/devOps)
+![Last commit](https://img.shields.io/github/last-commit/azertyop-e/devOps)
 
 ## Exercices GitHub Actions
 
@@ -33,15 +33,12 @@ exerciceWorkflow/
 
 ### Configuration avant utilisation
 
-1. **Remplacer les placeholders** dans ce fichier :
-   - `OWNER` : votre nom d'utilisateur GitHub
-   - `REPO` : le nom du dépôt
+1. **Secrets GitHub à configurer** :
+   - `DYNAPICTURES_API_KEY` : clé API DynaPictures (Ex. 02)
+   - `DYNAPICTURES_TEMPLATE_UID` : UID du template DynaPictures (Ex. 02)
+   - `DISCORD_WEBHOOK_URL` : URL du webhook Discord (Ex. 03)
 
-2. **Pour les exercices 02-04**, configurer les secrets GitHub :
-   - `DYNAPICTURES_API_KEY` : votre clé API DynaPictures
-   - `DISCORD_WEBHOOK_URL` : URL de votre webhook Discord
-
-3. **Activer GitHub Pages** pour le déploiement des images
+2. **Activer GitHub Pages** → Settings → Pages → source : branche `gh-pages`
 
 ### Utilisation
 
