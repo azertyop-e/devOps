@@ -138,4 +138,4 @@ jobs:
 
       - name: Afficher l'URL du site
         shell: bash
-        run: echo "Site : http://devops.freepage.cc/images/index.html"
+        run: echo "Site http://devops.freepage.cc/images/index.html"
