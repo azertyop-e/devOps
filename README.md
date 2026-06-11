@@ -18,6 +18,10 @@
 
 Pipeline progressif de 5 exercices couvrant les fondamentaux de GitHub Actions.
 
+### Site en ligne
+
+Galerie des images générées automatiquement (Ex. 02) : [http://devops.freepage.cc/images/index.html](http://devops.freepage.cc/images/index.html)
+
 ### Structure du projet
 
 ```

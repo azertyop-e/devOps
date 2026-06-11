@@ -4,12 +4,87 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Images générées</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 3rem 1.5rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #a78bfa, #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+
+    header p {
+      color: #64748b;
+      font-size: 0.95rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.5rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    figure {
+      background: #1e2130;
+      border: 1px solid #2d3148;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    figure:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    figure img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    figcaption {
+      padding: 0.875rem 1rem;
+      font-size: 0.8rem;
+      color: #94a3b8;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      border-top: 1px solid #2d3148;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  </style>
 </head>
-<body style="font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; margin: 2rem;">
-  <h1>Images générées</h1>
-  <p>D'après les messages de commit.</p>
-<figure><img src="7716f9cf07265a7766893bea8306be89a8ceef98.png" alt="fix: corriger le chemin FTP de déploiement des images" style="max-width: 600px; width: 100%; height: auto;" /><figcaption>fix: corriger le chemin FTP de déploiement des images</figcaption></figure>
-<figure><img src="d260dfdbd8f60afd1bf12a850fc64a4ce76e5e44.png" alt="fix: mettre à jour index.html de façon incrémentale et corriger le déploiement FTP" style="max-width: 600px; width: 100%; height: auto;" /><figcaption>fix: mettre à jour index.html de façon incrémentale et corriger le déploiement FTP</figcaption></figure>
-  <figure><img src="b776b11d6875735413a94abb8c21cf702f349771.png" alt="fix: fiabiliser la génération d&#39;images et éviter la boucle de workflow" style="max-width: 600px; width: 100%; height: auto;" /><figcaption>fix: fiabiliser la génération d&#39;images et éviter la boucle de workflow</figcaption></figure><figure><img src="7d4516a531d59fa954dd6618d4f1b61b61670a05.png" alt="fix: mapper le commit vers les champs du template DynaPictures" style="max-width: 600px; width: 100%; height: auto;" /><figcaption>fix: mapper le commit vers les champs du template DynaPictures</figcaption></figure>
+<body>
+  <header>
+    <h1>Images générées</h1>
+    <p>D'après les messages de commit.</p>
+  </header>
+  <div class="grid">
+<figure><img src="7716f9cf07265a7766893bea8306be89a8ceef98.png" alt="fix: corriger le chemin FTP de déploiement des images" /><figcaption>fix: corriger le chemin FTP de déploiement des images</figcaption></figure>
+<figure><img src="d260dfdbd8f60afd1bf12a850fc64a4ce76e5e44.png" alt="fix: mettre à jour index.html de façon incrémentale et corriger le déploiement FTP" /><figcaption>fix: mettre à jour index.html de façon incrémentale et corriger le déploiement FTP</figcaption></figure>
+<figure><img src="b776b11d6875735413a94abb8c21cf702f349771.png" alt="fix: fiabiliser la génération d&#39;images et éviter la boucle de workflow" /><figcaption>fix: fiabiliser la génération d&#39;images et éviter la boucle de workflow</figcaption></figure>
+<figure><img src="7d4516a531d59fa954dd6618d4f1b61b61670a05.png" alt="fix: mapper le commit vers les champs du template DynaPictures" /><figcaption>fix: mapper le commit vers les champs du template DynaPictures</figcaption></figure>
+  </div>
 </body>
 </html>
