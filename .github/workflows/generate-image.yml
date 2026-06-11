@@ -16,27 +16,9 @@ jobs:
       - name: Checkout du repository
         uses: actions/checkout@v4
 
-      - name: Préparer images et récupérer gh-pages
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Préparer le dossier images
         shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p images
-
-          REPO_URL="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          if git ls-remote --exit-code --heads "$REPO_URL" gh-pages >/dev/null 2>&1; then
-            rm -rf gh-pages-tmp
-            git clone --depth 1 --branch gh-pages "$REPO_URL" gh-pages-tmp
-            if [ -d "gh-pages-tmp/images" ]; then
-              cp -f gh-pages-tmp/images/*.png images/ 2>/dev/null || true
-              cp -f gh-pages-tmp/images/*.txt images/ 2>/dev/null || true
-            else
-              cp -f gh-pages-tmp/*.png images/ 2>/dev/null || true
-              cp -f gh-pages-tmp/*.txt images/ 2>/dev/null || true
-            fi
-            rm -rf gh-pages-tmp
-          fi
+        run: mkdir -p images
 
       - name: Récupérer message du dernier commit
         id: commit
@@ -145,17 +127,15 @@ jobs:
           name: image-generee
           path: images/${{ github.sha }}.png
 
-      - name: Déployer sur GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
+      - name: Déployer sur InfinityFree via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./images
-          destination_dir: images
-          publish_branch: gh-pages
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./images/
+          server-dir: /htdocs/images/
 
-      - name: Afficher l'URL du site GitHub Pages
+      - name: Afficher l'URL du site
         shell: bash
-        run: |
-          owner="${GITHUB_REPOSITORY%%/*}"
-          repo="${GITHUB_REPOSITORY##*/}"
-          echo "Site GitHub Pages : https://${owner}.github.io/${repo}/images/index.html"
+        run: echo "Site : http://devops.freepage.cc/images/index.html"

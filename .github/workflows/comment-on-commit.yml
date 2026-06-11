@@ -31,7 +31,7 @@ jobs:
             const fs = require('fs');
             const artifacts = fs.readdirSync('./artifacts');
             const imageName = artifacts[0];
-            const imageUrl = `https://${context.repo.owner}.github.io/${context.repo.repo}/images/${imageName}`;
+            const imageUrl = `http://devops.freepage.cc/images/${imageName}`;
             const commitMsg = (await exec.getExecOutput('git log -1 --pretty=%B')).stdout.trim();
             await github.rest.repos.createCommitComment({
               owner: context.repo.owner,

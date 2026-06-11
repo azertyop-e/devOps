@@ -27,7 +27,7 @@ jobs:
       - name: Envoyer notification Discord
         run: |
           IMAGE_NAME=$(ls ./artifacts | head -n 1)
-          IMAGE_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/images/$IMAGE_NAME"
+          IMAGE_URL="http://devops.freepage.cc/images/$IMAGE_NAME"
           curl -s -X POST "${{ secrets.DISCORD_WEBHOOK_URL }}" \
             -H "Content-Type: application/json" \
             -d "{\"content\": \"Nouveau commit : ${{ steps.commit.outputs.message }}\", \"embeds\": [{\"image\": {\"url\": \"$IMAGE_URL\"}}]}"
