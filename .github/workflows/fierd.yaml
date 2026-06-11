@@ -23,6 +23,7 @@ jobs:
 
   useArtifact:
     runs-on: ubuntu-latest
+    needs: generateFile
     steps:
       - name: Checkout du repository
         uses: actions/checkout@v4
