@@ -1,0 +1,1 @@
+fix: fiabiliser la génération d'images et éviter la boucle de workflow
