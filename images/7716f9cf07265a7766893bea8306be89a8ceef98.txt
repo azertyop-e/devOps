@@ -1,0 +1,1 @@
+fix: corriger le chemin FTP de déploiement des images
