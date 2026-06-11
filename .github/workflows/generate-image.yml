@@ -1,0 +1,55 @@
+name: Generate Image
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Récupérer le message du commit
+        id: commit
+        run: |
+          MSG=$(git log -1 --pretty=%B)
+          echo "message=$MSG" >> $GITHUB_OUTPUT
+          echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Appeler DynaPictures
+        run: |
+          curl -s -o images/commit-${{ steps.commit.outputs.sha }}.png \
+            "https://api.dynapictures.com/designs/YOUR_TEMPLATE_ID/render" \
+            -H "Authorization: Bearer ${{ secrets.DYNAPICTURES_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"params": [{"name": "text", "value": "${{ steps.commit.outputs.message }}"}]}'
+
+      - name: Générer index.html
+        run: |
+          echo "<html><body><h1>Images générées</h1>" > images/index.html
+          for f in images/*.png; do
+            echo "<img src='$(basename $f)' style='max-width:600px'><br>" >> images/index.html
+          done
+          echo "</body></html>" >> images/index.html
+
+      - name: Commit et push images
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add images/
+          git diff --cached --quiet || git commit -m "chore: add generated image for ${{ steps.commit.outputs.sha }}"
+          git push
+
+      - name: Upload artefact
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-generee
+          path: images/commit-${{ steps.commit.outputs.sha }}.png
+
+      - name: Déployer sur GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./images
