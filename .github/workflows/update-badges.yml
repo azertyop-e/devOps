@@ -30,7 +30,7 @@ jobs:
           repo="${{ github.repository }}"
           stars="$(gh api "repos/${repo}" --jq '.stargazers_count')"
           contributors="$(gh api "repos/${repo}/contributors?anon=1" --paginate --jq 'length')"
-          last_commit="$(git log -1 --format=%cs)"
+          last_commit="$(git log -1 --format=%cs | sed 's/-/--/g')"
           release="$(gh api "repos/${repo}/releases/latest" --jq -r '.tag_name // empty' 2>/dev/null || true)"
 
           if [ -z "$release" ]; then
